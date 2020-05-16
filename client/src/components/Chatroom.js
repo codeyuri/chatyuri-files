@@ -10,7 +10,7 @@ import OnlineUsers from './OnlineUsers';
 // gi usa lang ko ni para ipasa nako as props ang socket sa lain components
 // for dev
 const socket = io('http://localhost:5000', {
-// const socket = io('https://chatyuri.netlify.app', {
+// const socket = io('https://chatyuri.herokuapp.com/', {
     transports: ['websocket'],
     jsonp: false
 });

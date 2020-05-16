@@ -8,7 +8,7 @@
 
 > sa deploy kay ako gi deploy ang server sa heroku nya then mao ni ako gipang change sa files:
 
-> Chatroom component: socket endpoint => https://chatyuri.netlify.app
+> Chatroom component: socket endpoint => https://chatyuri.herokuapp.com/
 
 > server/package:  test ug start ra nya: "start": "node index.js"
 
