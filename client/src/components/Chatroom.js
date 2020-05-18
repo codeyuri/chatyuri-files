@@ -1,44 +1,57 @@
 import React, { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
+import { Redirect } from 'react-router-dom';
+// import { useSelector } from 'react-redux'; // try ta ko redux store
 import queryString from 'query-string';
-import io from 'socket.io-client';
 
 import ChatWindow from './ChatWindow';
 import Chatinput from './Chatinput';
 import OnlineUsers from './OnlineUsers';
 
-// gi usa lang ko ni para ipasa nako as props ang socket sa lain components
-// for dev
-const socket = io('http://localhost:5000', {
-// const socket = io('https://chatyuri.herokuapp.com/', {
-    transports: ['websocket'],
-    jsonp: false
-});
-
-const Chatroom = () => {
+const Chatroom = ({socket}) => {
     const [name, setName] = useState('');
     const [users, setUsers] = useState('');
     const [message, setMessage] = useState('');
     const [messages, setMessages] = useState([]);
     const [navOpen, setNavOpen] = useState(false);
-    const chat = useSelector(state => state.chat)
-    // const ENDPOINT = 'http://localhost:5000'; // mao ni una nako gamit
+    // const chat = useSelector(state => state.chat) // try ta ko redux store
 
     useEffect(() => {
-        const { name } = queryString.parse(location.search)
+        let { name } = queryString.parse(location.search)
+        if (!name) {
+            name = 'None' // gibutang lang ko ni para di mag undefined ang name pero unnecessary unta ni
+            window.location.replace('/');
+        }
+        // gi butangan lang nako ug slice kay sa local if mag manual search sa chatroom kay makasud gihapon bisag 
+        // lapas sa max character sa name
+        // sa URL if sa local nya if lapas ang max char kay makita gyapon sa URL pero naka slice na sya sa chatwindow
+        let slicedName = name.slice(0, 10)
         // socket = io(ENDPOINT);
         // setName(chat.user)
-        setName(name)
+        setName(slicedName)
+
+        if(!socket) {
+            alert('no connection established');
+            window.location.replace('/');
+        }
+
+        socket.on('reconnect_attempt', () => {
+            socket.io.opts.transports = ['polling', 'websocket'];
+        });
         
-        socket.emit('joinedChat', { name }, () => {
-            // nothing here
+        socket.emit('joinedChat', { name }, (error) => {
+            if(error) {
+                alert(error);
+                window.location.replace('/');
+            }
         });
 
         return () => {
-            socket.emit('disconnect');
+            socket.emit('disconnect', () => {
+                socket.open();
+            });
             socket.off();
         }
-    }, [socket])
+    }, [socket, location.search])
 
     useEffect(() => {
         socket.on('message', (message) => {
@@ -57,20 +70,37 @@ const Chatroom = () => {
         }
     }
 
+    //prevent backspace sa keyboard ma exit ang app except sa textarea or input elements
+    // kaso dili working sa mobile kay lain ang keycode sa backspace sa mobile, react native unta makaya guro
+    // dili pa ko kamao sa react native haha
+    useEffect(() => {
+        let addev = window.addEventListener('keydown', function (event) {
+            if (event.key === 'Backspace' || event.keyCode == 229 || event.keyCode == 8 || event.key == 229 || event.key == 8) {
+                var rx = /input|select|textarea/i;
+                if (!rx.test(event.target.tagName) || event.target.disabled || event.target.readOnly ) {
+                    event.preventDefault();
+                    return false;
+                }
+            }
+        });
+        return () => {
+            window.removeEventListener('keydown', addev);
+        }
+    }, [addEventListener]);
+
     return (
-        <div className="chat_page">
+        <div className="chat_page" id="test">
             <div className="chat_top_div">
-                <h2>Chatyuri <small>Chat App by Dan Quesada III</small></h2>
-                { navOpen ? (
-                    <>
-                        <strong onClick={() => setNavOpen(false)} className="close"></strong>
-                        <OnlineUsers users={users} />
-                    </>
-                 ) : <strong onClick={() => setNavOpen(true)} className="open"></strong>}
+                <h2>Chatyuri <small>Chat App <q>by Dan Quesada III</q></small></h2>
+                <div className="chat_top_right">
+                    <span>({users.length})</span>
+                    <strong onClick={() => setNavOpen(!navOpen)} className={navOpen ? 'close' : 'open'}></strong>
+                </div>
             </div>
             <ChatWindow 
                 messages={messages}
                 name={name}
+                setNavOpen={setNavOpen}
             />
             <Chatinput
                 name={name}
@@ -79,6 +109,7 @@ const Chatroom = () => {
                 sendMessage={sendMessage}
                 socket={socket}
             />
+            <OnlineUsers users={users} navOpen={navOpen} />
         </div>
     )
 }

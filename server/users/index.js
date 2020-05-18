@@ -1,12 +1,14 @@
 const users = [];
 
 const addUser = ({ id, name }) => {
-    name = name.trim().toLowerCase();
+    // gi butangan lang nako ug slice kay sa local if mag manual search sa chatroom kay makasud gihapon bisag 
+    // lapas sa max character sa name
+    // sa URL if sa local nya if lapas ang max char kay makita gyapon sa URL pero naka slice na sya sa chatwindow
+    name = name.trim().toLowerCase().slice(0, 10);
     const existingUser = users.find(user => user.name === name);
 
-    if(existingUser) {
-        return { error: 'Username is taken'};
-    }
+    if(!name) return { error: 'Username is required.' };
+    if(existingUser) { return { error: 'Username is taken'}; }
 
     const user = { id, name };
     users.push(user);

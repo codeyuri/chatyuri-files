@@ -1,8 +1,8 @@
 import React from 'react';
 
-const TextContainer = ({ users }) => {
+const TextContainer = ({ users, navOpen }) => {
     return (
-        <div className="users_div">
+        <div className={navOpen ? 'users_div active' : 'users_div'}>
         {users ? (
             <>
                 <h3>Online Users:</h3>

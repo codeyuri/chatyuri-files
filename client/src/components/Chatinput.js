@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 
 const Chatinput = ({name, message, setMessage, sendMessage, socket}) => {
     const [typing, setTyping] = useState(false);
     const [typingMsg, setTypingMsg] = useState('');
+    const keypadRef = useRef(null);
 
     // kani nga useeffect kay if naay mag type mo send padung sa server kinsa ang nag typing
     useEffect(() => {
@@ -10,7 +11,7 @@ const Chatinput = ({name, message, setMessage, sendMessage, socket}) => {
             socket.emit('isTyping', name);
             setTimeout(() => {
                 setTyping(false)
-            }, 100)
+            }, 200)
         }
     }, [typing])
 
@@ -24,7 +25,7 @@ const Chatinput = ({name, message, setMessage, sendMessage, socket}) => {
         })
     }, [setTypingMsg, typing])
 
-    const handleKeyPress = ev => {
+    const handleKeyDown = ev => {
         if (ev.key == 'Enter' && !ev.shiftKey) {
             sendMessage(ev)
             setTyping(false)
@@ -34,20 +35,30 @@ const Chatinput = ({name, message, setMessage, sendMessage, socket}) => {
         }
     }
 
+    const handleSend = () => {
+        if(!socket) {
+            window.location.replace('/');
+        } else {
+            keypadRef.current.focus()
+        }
+    }
+
     return (
         <div className="chat_btm">
             <p className="typing">{ typingMsg }</p>
             <form onSubmit={e => sendMessage(e)}>
-                <textarea 
+                <textarea
+                    ref={keypadRef} 
                     type="text" 
                     autoComplete="off"
                     value={message}
                     placeholder="Type a message..." 
                     onChange={e => setMessage(e.target.value)}
-                    onKeyPress={e => handleKeyPress(e)}
+                    onKeyDown={e => handleKeyDown(e)}
+                    onKeyPress={e => handleKeyDown(e)}
                 >
                 </textarea>
-                <button id="sendbtn">Send</button>
+                <button id="sendbtn" onClick={handleSend}>Send</button>
             </form>
         </div>
     )
