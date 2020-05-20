@@ -28,16 +28,7 @@ const Chatroom = ({socket}) => {
         // socket = io(ENDPOINT);
         // setName(chat.user)
         setName(slicedName)
-
-        if(!socket) {
-            alert('no connection established');
-            window.location.replace('/');
-        }
-
-        socket.on('reconnect_attempt', () => {
-            socket.io.opts.transports = ['polling', 'websocket'];
-        });
-        
+       
         socket.emit('joinedChat', { name }, (error) => {
             if(error) {
                 alert(error);
@@ -46,9 +37,7 @@ const Chatroom = ({socket}) => {
         });
 
         return () => {
-            socket.emit('disconnect', () => {
-                socket.open();
-            });
+            socket.emit('disconnect');
             socket.off();
         }
     }, [socket, location.search])
